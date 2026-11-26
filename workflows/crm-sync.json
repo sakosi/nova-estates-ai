@@ -1,0 +1,324 @@
+{
+  "name": "Nova Estates — CRM Sync",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "6f0499ee-e97a-4326-aa9e-7e4cd05cb1a9",
+      "name": "Run Manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id AS lead_id, location, property_type, bedrooms, budget_max, purpose, timeline_days, lead_score, status, created_at, updated_at FROM public.leads ORDER BY id",
+        "options": {}
+      },
+      "id": "b2b020dd-d89d-4606-a02f-947d305d8f30",
+      "name": "Get Leads",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        224,
+        96
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "dhLCXmfsSknGXDOa",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1J50Ls7b4H0O_V7CGO79oFEMqq9B6TjYikHoqrU0GbEE",
+          "mode": "list",
+          "cachedResultName": "Nova Estates — Sales CRM.",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1J50Ls7b4H0O_V7CGO79oFEMqq9B6TjYikHoqrU0GbEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1J50Ls7b4H0O_V7CGO79oFEMqq9B6TjYikHoqrU0GbEE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "lead_id"
+          ],
+          "value": {
+            "lead_id": "={{ $json.lead_id }}",
+            "location": "={{ $json.location }}",
+            "property_type": "={{ $json.property_type }}",
+            "bedrooms": "={{ $json.bedrooms }}",
+            "budget_max": "={{ $json.budget_max }}",
+            "purpose": "={{ $json.purpose }}",
+            "timeline_days": "={{ $json.timeline_days }}",
+            "lead_score": "={{ $json.lead_score }}",
+            "status": "={{ $json.status }}",
+            "created_at": "={{ $json.created_at }}",
+            "updated_at": "={{ $json.updated_at }}"
+          },
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "property_type",
+              "displayName": "property_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "bedrooms",
+              "displayName": "bedrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "budget_max",
+              "displayName": "budget_max",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "purpose",
+              "displayName": "purpose",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "timeline_days",
+              "displayName": "timeline_days",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "lead_score",
+              "displayName": "lead_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b9fda02b-e80d-45a8-a0d5-69c4ce0bad0e",
+      "name": "Upsert Lead in Sales CRM",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        96
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rL8jL2x7o0FS6ULe",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO public.crm_sync_log (lead_id, platform, external_id, action, sync_status, error_message, synced_at) SELECT $1::bigint, 'google_sheets', $2::text, CASE WHEN EXISTS (SELECT 1 FROM public.crm_sync_log WHERE lead_id = $1::bigint AND sync_status = 'success') THEN 'update' ELSE 'create' END, 'success', NULL, now()",
+        "options": {
+          "queryReplacement": "={{ [Number($json.lead_id), String($json.lead_id)] }}"
+        }
+      },
+      "id": "4cb8a8e6-d207-46d0-8ed1-06636a065cce",
+      "name": "Log Sync Success",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        672,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "dhLCXmfsSknGXDOa",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO public.crm_sync_log (lead_id, platform, external_id, action, sync_status, error_message) SELECT $1::bigint, 'google_sheets', NULL, CASE WHEN EXISTS (SELECT 1 FROM public.crm_sync_log WHERE lead_id = $1::bigint AND sync_status = 'success') THEN 'update' ELSE 'create' END, 'failed', $2::text",
+        "options": {
+          "queryReplacement": "={{ [Number($('Get Leads').item.json.lead_id), String($json.error?.message ?? $json.error ?? 'Unknown Google Sheets error')] }}"
+        }
+      },
+      "id": "7af346c1-aed9-4a4f-9295-87dd53ca2444",
+      "name": "Log Sync Failure",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        672,
+        192
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "dhLCXmfsSknGXDOa",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "10795a75-930e-4750-91aa-f948b1b202fb",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        192
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Run Manually": {
+      "main": [
+        [
+          {
+            "node": "Get Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Leads": {
+      "main": [
+        [
+          {
+            "node": "Upsert Lead in Sales CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Lead in Sales CRM": {
+      "main": [
+        [
+          {
+            "node": "Log Sync Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Sync Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 15 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Get Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "46b7ab8f-d30c-4028-98e7-52b3ccf73cdb",
+  "meta": {
+    "instanceId": "1e7e8ae0ec9d2ba9529ca8b3477105ed0b53020e746d12880e21704f8758d3ab"
+  },
+  "nodeGroups": [],
+  "id": "m9mRWJfqFV5BQPPP",
+  "tags": []
+}

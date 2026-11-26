@@ -1,0 +1,196 @@
+{
+  "name": "Nova Estates — Knowledge Base Ingestion",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "ac85aa61-3010-494a-b8c9-89fd51488127",
+      "name": "Run Ingestion",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM documents WHERE metadata->>'source' = 'nova_estates_kb'",
+        "options": {}
+      },
+      "id": "dce1e62b-d785-4093-8875-10e45c3f7498",
+      "name": "Clear Previous Knowledge Base Documents",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        224,
+        112
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "dhLCXmfsSknGXDOa",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const docs = [\n  ['Agency Overview', 'Nova Estates is a fictional Dubai real estate agency created for demonstration purposes. It helps customers discover residential properties, compare listings and arrange consultations.'],\n  ['Agency Commission', 'Nova Estates charges a demonstration buyer service fee of 1.75% of the property purchase price. The initial consultation is free.'],\n  ['Property Viewings', 'Customers can request up to three complimentary property viewings. Viewings must be requested at least 48 hours in advance and are subject to confirmation by a property manager.'],\n  ['Working Hours', 'Nova Estates operates Monday through Saturday from 9:00 AM to 7:00 PM Dubai time. The agency is closed on Sundays.'],\n  ['Reservation Policy', 'The fictional property reservation fee is 15,000 AED. A property reservation is valid for seven calendar days, subject to written confirmation.'],\n  ['Investment Consultation', 'Nova Estates offers a complimentary 30-minute investment consultation. The agency does not guarantee investment returns or rental yields.'],\n  ['Customer Support', 'Customers can request a callback from a property consultant. The demonstration response target is four business hours.'],\n  ['Privacy Policy', 'Contact details may only be collected voluntarily. Marketing follow-ups require explicit customer consent. Customers may request deletion of their personal information.'],\n  ['Listing Availability', 'Property availability and prices must always be verified using the Search Properties database tool. Knowledge base documents must not be treated as live listing inventory.'],\n  ['Demo Disclaimer', 'All property listings, prices, agency policies and services in this project are fictional and provided solely for software demonstration.'],\n];\nreturn docs.map(([title, content], i) => ({ json: { title, content, doc_number: i + 1 } }));"
+      },
+      "id": "ca7c115e-9169-4f2a-9dc0-6e4a7c090056",
+      "name": "Knowledge Documents",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "id": "36b77762-fe4e-446b-a2f5-7da7380c77bc",
+      "name": "Insert Knowledge Base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.4,
+      "position": [
+        672,
+        112
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "6VYkbx9azQbRhVhU",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "f8abc2b3-1a6a-4a82-ab7f-a9694889ad75",
+      "name": "Gemini Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        688,
+        336
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "CJq8fwc9xJSH4RgD",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.title }}: {{ $json.content }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "source",
+                "value": "nova_estates_kb"
+              },
+              {
+                "name": "doc_number",
+                "value": "={{ $json.doc_number }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "8e1956c8-caff-45b0-9398-19d46631519a",
+      "name": "Knowledge Document Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        816,
+        336
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Run Ingestion": {
+      "main": [
+        [
+          {
+            "node": "Clear Previous Knowledge Base Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Previous Knowledge Base Documents": {
+      "main": [
+        [
+          {
+            "node": "Knowledge Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Knowledge Documents": {
+      "main": [
+        [
+          {
+            "node": "Insert Knowledge Base",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Insert Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Knowledge Document Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Insert Knowledge Base",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6edcfa3a-9347-474d-996f-456358dd5f90",
+  "meta": {
+    "instanceId": "1e7e8ae0ec9d2ba9529ca8b3477105ed0b53020e746d12880e21704f8758d3ab"
+  },
+  "nodeGroups": [],
+  "id": "BPzEVxgAUhVTpn7M",
+  "tags": []
+}
